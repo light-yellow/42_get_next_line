@@ -1,46 +1,50 @@
 #include "get_next_line.h"
 
-int	get_next_line(const int fd, char **line)
+static int	ft_set_line(int fd, char **fd_tab, char **line)
 {
-	char		*buffer[BUFF_SIZE + 1];
-	char		*tmp_str;
-	char		*end_line;
+	char	*end_line;
+	char	*str_tmp;
+
+	if (!(end_line = ft_strchr(fd_tab[fd], '\n')))
+	{
+		*line = ft_strdup(fd_tab[fd]);
+		ft_strdel(&fd_tab[fd]);
+	}
+	else
+	{
+		*line = ft_strndup(fd_tab[fd], (size_t)(end_line - fd_tab[fd]));
+		str_tmp = ft_strdup(end_line + 1);
+		free(fd_tab[fd]);
+		fd_tab[fd] = str_tmp;
+	}
+	if (!(*line))
+		return (-1);
+	return (1);
+}
+
+int		get_next_line(const int fd, char **line)
+{
 	static char	*fd_tab[FD_MAX];
-	int		nbytes;
+	char		*str_tmp;
+	char		buffer[BUFF_SIZE + 1];
+	int             nbytes;
 
 	if (fd < 0 || fd > FD_MAX || !line || BUFF_SIZE <= 0)
 		return (-1);
 	if (!fd_tab[fd])
 		fd_tab[fd] = ft_strnew(0);
-	while (nbytes = read(fd, buffer, BUFF_SIZE) > 0)
+	while ((nbytes = read(fd, buffer, BUFF_SIZE)) > 0)
 	{
 		buffer[nbytes] = '\0';
-		tmp_str = fd_tab[fd];
-		fd_tab[fd] = ft_strjoin(fd_tab[fd], buffer);
-		free(tmp_str);
-		if (end_line = ft_strchr(buffer, '\n'))
+		str_tmp = ft_strjoin(fd_tab[fd], buffer);
+		free(fd_tab[fd]);
+		fd_tab[fd] = str_tmp;
+		if (ft_strchr(buffer, '\n'))
 			break ;
 	}
 	if (nbytes < 0)
 		return (-1);
-	else if (!nbytes || !fd_tab[fd] || !fd_tab[fd][0])
+	else if (nbytes == 0 && (!fd_tab[fd] || !fd_tab[fd][0]))
 		return (0);
-	if (end_line)
-	{
-		if (*end_line == fd_tab[fd][0])
-			*line = ft_strdup("");
-		else
-			*line = ft_strndup(fd_tab[fd], end_line - fd_tab[fd]);
-		tmp_str = fd_tab[fd];
-		fd_tab[fd] = ft_strdup(end_line + 1);
-		ft_strdel(&tmp_str);
-	}
-	else
-	{
-		*line = ft_strdup(fd_tab[fd]);
-		ft_strdel(&fd_tab[fd]);
-	}
-	if (!(*line))
-		return (-1);
-	return (1);
+	return (ft_set_line(fd, fd_tab, line));
 }
