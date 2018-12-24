@@ -1,3 +1,15 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   get_next_line.c                                    :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: jgoyette <marvin@42.fr>                    +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2018/12/24 07:21:23 by jgoyette          #+#    #+#             */
+/*   Updated: 2018/12/24 09:14:47 by jgoyette         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "get_next_line.h"
 
 static int	ft_set_line(int fd, char **fd_tab, char **line)
@@ -13,7 +25,8 @@ static int	ft_set_line(int fd, char **fd_tab, char **line)
 	else
 	{
 		*line = ft_strndup(fd_tab[fd], (size_t)(end_line - fd_tab[fd]));
-		str_tmp = ft_strdup(end_line + 1);
+		if (!(str_tmp = ft_strdup(end_line + 1)))
+			return (-1);
 		free(fd_tab[fd]);
 		fd_tab[fd] = str_tmp;
 	}
@@ -22,12 +35,12 @@ static int	ft_set_line(int fd, char **fd_tab, char **line)
 	return (1);
 }
 
-int		get_next_line(const int fd, char **line)
+int			get_next_line(const int fd, char **line)
 {
 	static char	*fd_tab[FD_MAX];
 	char		*str_tmp;
 	char		buffer[BUFF_SIZE + 1];
-	int             nbytes;
+	int			nbytes;
 
 	if (fd < 0 || fd > FD_MAX || !line || BUFF_SIZE <= 0)
 		return (-1);
@@ -36,7 +49,8 @@ int		get_next_line(const int fd, char **line)
 	while ((nbytes = read(fd, buffer, BUFF_SIZE)) > 0)
 	{
 		buffer[nbytes] = '\0';
-		str_tmp = ft_strjoin(fd_tab[fd], buffer);
+		if (!(str_tmp = ft_strjoin(fd_tab[fd], buffer)))
+			return (-1);
 		free(fd_tab[fd]);
 		fd_tab[fd] = str_tmp;
 		if (ft_strchr(buffer, '\n'))
